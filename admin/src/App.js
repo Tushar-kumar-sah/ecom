@@ -1,7 +1,6 @@
 // src/App.js
-// UPDATED APP.JS
-// LOGIN REMOVED TEMPORARILY
-// DIRECT ADMIN ACCESS
+// FULL UPDATED APP.JS
+// PREMIUM ADMIN PANEL ROUTING
 
 import React from "react";
 import {
@@ -14,6 +13,7 @@ import {
 /* =========================
    PAGES
 ========================= */
+import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
 import Orders from "./pages/Orders";
@@ -22,46 +22,97 @@ import Coupons from "./pages/Coupons";
 import Settings from "./pages/Settings";
 
 /* =========================
+   PROTECTED ROUTE
+========================= */
+const ProtectedRoute = ({
+  children,
+}) => {
+  const adminInfo =
+    localStorage.getItem(
+      "adminInfo"
+    );
+
+  return adminInfo ? (
+    children
+  ) : (
+    <Navigate
+      to="/login"
+      replace
+    />
+  );
+};
+
+/* =========================
    APP
 ========================= */
 function App() {
   return (
     <Router>
       <Routes>
+        {/* LOGIN */}
+        <Route
+          path="/login"
+          element={<Login />}
+        />
+
         {/* DASHBOARD */}
         <Route
           path="/"
-          element={<Dashboard />}
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
         />
 
         {/* PRODUCTS */}
         <Route
           path="/products"
-          element={<Products />}
+          element={
+            <ProtectedRoute>
+              <Products />
+            </ProtectedRoute>
+          }
         />
 
         {/* ORDERS */}
         <Route
           path="/orders"
-          element={<Orders />}
+          element={
+            <ProtectedRoute>
+              <Orders />
+            </ProtectedRoute>
+          }
         />
 
         {/* USERS */}
         <Route
           path="/users"
-          element={<Users />}
+          element={
+            <ProtectedRoute>
+              <Users />
+            </ProtectedRoute>
+          }
         />
 
         {/* COUPONS */}
         <Route
           path="/coupons"
-          element={<Coupons />}
+          element={
+            <ProtectedRoute>
+              <Coupons />
+            </ProtectedRoute>
+          }
         />
 
         {/* SETTINGS */}
         <Route
           path="/settings"
-          element={<Settings />}
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
         />
 
         {/* FALLBACK */}
