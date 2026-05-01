@@ -1,32 +1,69 @@
-// backend/routes/adminRoutes.js
 const express = require("express");
 const router = express.Router();
 
-// Simple admin login (no JWT, just hardcoded check)
-router.post("/login", (req, res) => {
-  const { username, password } = req.body;
+// MODELS
+const Product = require("../models/Product");
+const User = require("../models/User");
+const Order = require("../models/Order");
 
-  // Hardcoded credentials – change to your own
-  if (username === "admin" && password === "123456") {
-    return res.json({
+/* =========================
+   DASHBOARD STATS
+========================= */
+router.get("/stats", async (req, res) => {
+  try {
+    const products = await Product.countDocuments();
+    const users = await User.countDocuments();
+    const orders = await Order.countDocuments();
+
+    const revenueData = await Order.aggregate([
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$totalPrice" },
+        },
+      },
+    ]);
+
+    const revenue = revenueData.length > 0 ? revenueData[0].total : 0;
+
+    res.json({
       success: true,
-      user: {
-        username: "admin",
-        role: "admin"
-      }
+      products,
+      users,
+      orders,
+      revenue,
+    });
+  } catch (error) {
+    console.error("Stats Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to load dashboard data",
     });
   }
-
-  return res.status(401).json({
-    success: false,
-    message: "Invalid username or password"
-  });
 });
 
-// Example protected route (you can add more later)
-router.get("/dashboard", (req, res) => {
-  // For now, just a placeholder – you can add token check later
-  res.json({ success: true, message: "Welcome to admin dashboard" });
+/* =========================
+   RECENT ORDERS
+========================= */
+router.get("/recent-orders", async (req, res) => {
+  try {
+    const orders = await Order.find()
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    res.json({
+      success: true,
+      orders,
+    });
+  } catch (error) {
+    console.error("Recent Orders Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to load recent orders",
+    });
+  }
 });
 
 module.exports = router;

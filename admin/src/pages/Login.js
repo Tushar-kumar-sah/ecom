@@ -385,4 +385,4 @@ const demoBox = {
   fontSize: "13px",
 };
 
-export default Logn;
+export default Login;
