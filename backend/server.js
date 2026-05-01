@@ -1,11 +1,17 @@
 // backend/server.js
 // FIXED SERVER.JS - USER ROUTES LOAD PROPERLY
 // ADMIN PANEL + FRONTEND + AUTH + STABLE
+// ADDED: RAZORPAY PAYMENT INTEGRATION
 
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
+
+// ========== ADDED FOR RAZORPAY ==========
+const Razorpay = require("razorpay");
+const crypto = require("crypto");
+// ========================================
 
 const app = express();
 
@@ -97,6 +103,80 @@ if (couponRoutes) {
 if (settingsRoutes) {
   app.use("/api/settings", settingsRoutes);
 }
+
+/* ==================================
+RAZORPAY PAYMENT ROUTES (ADDED)
+================================== */
+
+// Initialize Razorpay instance
+const razorpayInstance = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
+
+// Create Razorpay order endpoint
+app.post("/api/create-razorpay-order", async (req, res) => {
+  try {
+    const { amount, currency = "INR", receipt } = req.body;
+    
+    if (!amount || isNaN(amount) || amount <= 0) {
+      return res.status(400).json({ success: false, message: "Invalid amount" });
+    }
+
+    const options = {
+      amount: Number(amount), // amount in paise
+      currency,
+      receipt: receipt || `receipt_${Date.now()}`,
+      payment_capture: 1, // auto capture
+    };
+
+    const order = await razorpayInstance.orders.create(options);
+    console.log("✅ Razorpay order created:", order.id);
+
+    res.status(200).json({
+      success: true,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+    });
+  } catch (error) {
+    console.error("❌ Razorpay order creation error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to create Razorpay order",
+    });
+  }
+});
+
+// Verify Razorpay payment endpoint
+app.post("/api/verify-razorpay-payment", (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ success: false, message: "Missing payment details" });
+    }
+
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(body.toString())
+      .digest("hex");
+
+    const isAuthentic = expectedSignature === razorpay_signature;
+
+    if (isAuthentic) {
+      console.log("✅ Payment verified:", razorpay_payment_id);
+      res.status(200).json({ success: true, message: "Payment verified successfully" });
+    } else {
+      console.error("❌ Invalid signature for payment:", razorpay_payment_id);
+      res.status(400).json({ success: false, message: "Invalid signature" });
+    }
+  } catch (error) {
+    console.error("❌ Payment verification error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 /* ==================================
 TEST ROUTES

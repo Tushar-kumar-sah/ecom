@@ -31,37 +31,27 @@ import HelpCenter from "./pages/HelpCenter";
 import Contact from "./pages/Contact";
 import About from "./pages/About";
 
+/* PAYMENT CALLBACK (optional) – in case Razorpay redirects */
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentFailure from "./pages/PaymentFailure";
+
 /* ==================================
 PROTECTED ROUTE
 ================================== */
 
-const ProtectedRoute = ({
-  children,
-}) => {
-  const token =
-    localStorage.getItem(
-      "token"
-    );
-
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem("token");
   if (!token) {
-    return (
-      <Navigate
-        to="/login"
-        replace
-      />
-    );
+    return <Navigate to="/login" replace />;
   }
-
   return children;
 };
 
 /* ==================================
-MAIN LAYOUT
+MAIN LAYOUT (Navbar + Footer)
 ================================== */
 
-const MainLayout = ({
-  children,
-}) => {
+const MainLayout = ({ children }) => {
   return (
     <>
       <Navbar />
@@ -79,8 +69,7 @@ function App() {
   return (
     <Router>
       <Routes>
-
-        {/* HOME */}
+        {/* PUBLIC PAGES WITH LAYOUT */}
         <Route
           path="/"
           element={
@@ -89,8 +78,6 @@ function App() {
             </MainLayout>
           }
         />
-
-        {/* SHOP */}
         <Route
           path="/shop"
           element={
@@ -99,8 +86,6 @@ function App() {
             </MainLayout>
           }
         />
-
-        {/* PRODUCT DETAILS */}
         <Route
           path="/product/:id"
           element={
@@ -109,8 +94,6 @@ function App() {
             </MainLayout>
           }
         />
-
-        {/* CART */}
         <Route
           path="/cart"
           element={
@@ -120,7 +103,7 @@ function App() {
           }
         />
 
-        {/* CHECKOUT */}
+        {/* CHECKOUT – you may also protect it if login required */}
         <Route
           path="/checkout"
           element={
@@ -130,19 +113,69 @@ function App() {
           }
         />
 
-        {/* LOGIN */}
+        {/* STATIC INFO PAGES */}
         <Route
-          path="/login"
-          element={<Login />}
+          path="/about"
+          element={
+            <MainLayout>
+              <About />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/contact"
+          element={
+            <MainLayout>
+              <Contact />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/shipping-policy"
+          element={
+            <MainLayout>
+              <ShippingPolicy />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/return-policy"
+          element={
+            <MainLayout>
+              <ReturnPolicy />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/privacy-policy"
+          element={
+            <MainLayout>
+              <PrivacyPolicy />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/terms"
+          element={
+            <MainLayout>
+              <Terms />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/help-center"
+          element={
+            <MainLayout>
+              <HelpCenter />
+            </MainLayout>
+          }
         />
 
-        {/* REGISTER */}
-        <Route
-          path="/register"
-          element={<Register />}
-        />
+        {/* AUTH PAGES (NO NAVBAR/FOOTER – CLEAN LAYOUT) */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-        {/* PROFILE */}
+        {/* PROTECTED USER PROFILE */}
         <Route
           path="/profile"
           element={
@@ -154,87 +187,26 @@ function App() {
           }
         />
 
-        {/* ABOUT */}
+        {/* OPTIONAL: RAZORPAY CALLBACK PAGES (if you want to handle redirects) */}
         <Route
-          path="/about"
+          path="/payment-success"
           element={
             <MainLayout>
-              <About />
+              <PaymentSuccess />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/payment-failure"
+          element={
+            <MainLayout>
+              <PaymentFailure />
             </MainLayout>
           }
         />
 
-        {/* CONTACT */}
-        <Route
-          path="/contact"
-          element={
-            <MainLayout>
-              <Contact />
-            </MainLayout>
-          }
-        />
-
-        {/* SHIPPING POLICY */}
-        <Route
-          path="/shipping-policy"
-          element={
-            <MainLayout>
-              <ShippingPolicy />
-            </MainLayout>
-          }
-        />
-
-        {/* RETURN POLICY */}
-        <Route
-          path="/return-policy"
-          element={
-            <MainLayout>
-              <ReturnPolicy />
-            </MainLayout>
-          }
-        />
-
-        {/* PRIVACY POLICY */}
-        <Route
-          path="/privacy-policy"
-          element={
-            <MainLayout>
-              <PrivacyPolicy />
-            </MainLayout>
-          }
-        />
-
-        {/* TERMS */}
-        <Route
-          path="/terms"
-          element={
-            <MainLayout>
-              <Terms />
-            </MainLayout>
-          }
-        />
-
-        {/* HELP CENTER */}
-        <Route
-          path="/help-center"
-          element={
-            <MainLayout>
-              <HelpCenter />
-            </MainLayout>
-          }
-        />
-
-        {/* 404 */}
-        <Route
-          path="*"
-          element={
-            <Navigate
-              to="/"
-              replace
-            />
-          }
-        />
-
+        {/* 404 – Redirect to Home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
